@@ -1,0 +1,113 @@
+// Types for the Forestar Installer application
+export enum InventoryCategory {
+  ROBOT = 'ROBOT',
+  PLUGIN = 'PLUGIN',
+  ANTENNA = 'ANTENNA',
+  SHELTER = 'SHELTER',
+  WIRE = 'WIRE',
+  SUPPORT = 'SUPPORT',
+}
+
+export interface RobotInventory {
+  id: number;
+  reference?: string;
+  name: string;
+  category: InventoryCategory;
+  sellingPrice?: number;
+  purchasePrice?: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface PurchaseOrder {
+  id: number;
+  createdAt: Date;
+  updatedAt: Date;
+
+  // Client information
+  clientFirstName: string;
+  clientLastName: string;
+  clientAddress: string;
+  clientCity: string;
+  clientPhone: string;
+  clientEmail: string;
+  deposit: number;
+  devisSignatureAccessTokenArray: string[];
+  emailDevisSent: boolean;
+
+  // Robot details
+  robotInventoryId: number;
+  robotInventory: RobotInventory;
+  serialNumber?: string;
+
+  // Accessories
+  pluginInventoryId?: number;
+  antennaInventoryId?: number;
+  shelterInventoryId?: number;
+  plugin?: RobotInventory;
+  antenna?: RobotInventory;
+  shelter?: RobotInventory;
+  hasWire: boolean;
+  wireLength?: number;
+  hasAntennaSupport: boolean;
+  hasPlacement: boolean;
+
+  // Installation
+  installationDate?: Date;
+  needsInstaller: boolean;
+  installationNotes?: string;
+
+  // Status fields
+  hasAppointment: boolean;
+  isInstalled: boolean;
+  isInvoiced: boolean;
+  devis: boolean;
+
+  // Crisis specific fields
+  validUntil?: Date;
+  bankAccountNumber?: string;
+
+  // Files
+  orderPdfId?: string;
+  invoicePath?: string;
+  photosPaths: string[];
+
+  // Signature fields
+  clientSignature?: string;
+  signatureTimestamp?: Date;
+
+  eventId?: string; // Calendar integration
+}
+
+export interface InstallationFormData {
+  orderId: number;
+
+  // Equipment installed status
+  robotInstalled: boolean;
+  pluginInstalled: boolean;
+  antennaInstalled: boolean;
+  shelterInstalled: boolean;
+  wireInstalled: boolean;
+  antennaSupportInstalled: boolean;
+  placementCompleted: boolean;
+
+  // Notes and comments
+  installationNotes: string;
+  missingItems: string;
+  additionalComments: string;
+
+  // Client signature
+  clientSignature: string;
+  installerName: string;
+  installationDate: Date;
+
+  // Photos
+  photosPaths: string[];
+}
+
+export interface InstallationReceipt {
+  order: PurchaseOrder;
+  installation: InstallationFormData;
+  generatedAt: Date;
+  installerName: string;
+}
