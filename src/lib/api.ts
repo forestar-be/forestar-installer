@@ -87,6 +87,15 @@ export const completeInstallation = (
     installationNotes?: string;
     installerName?: string;
     clientSignature?: string;
+    robotInstalled?: boolean;
+    pluginInstalled?: boolean;
+    antennaInstalled?: boolean;
+    shelterInstalled?: boolean;
+    wireInstalled?: boolean;
+    antennaSupportInstalled?: boolean;
+    placementCompleted?: boolean;
+    missingItems?: string;
+    additionalComments?: string;
   }
 ): Promise<PurchaseOrder> =>
   apiRequest(`/installer/purchase-orders/${id}/complete`, 'PUT', token, data);

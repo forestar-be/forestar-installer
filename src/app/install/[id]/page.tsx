@@ -84,6 +84,15 @@ export default function InstallationPage() {
         installationNotes: data.installationNotes,
         installerName: data.installerName,
         clientSignature: data.clientSignature,
+        robotInstalled: data.robotInstalled,
+        pluginInstalled: data.pluginInstalled,
+        antennaInstalled: data.antennaInstalled,
+        shelterInstalled: data.shelterInstalled,
+        wireInstalled: data.wireInstalled,
+        antennaSupportInstalled: data.antennaSupportInstalled,
+        placementCompleted: data.placementCompleted,
+        missingItems: data.missingItems,
+        additionalComments: data.additionalComments,
       });
 
       // Show success screen
