@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth';
-import { useRouter } from 'next/navigation';
-import { Package, Lock, User } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Lock, User } from 'lucide-react';
+import Image from 'next/image';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
@@ -12,12 +13,16 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const { loginAction, isAuthenticated } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Get the redirect parameter from URL
+  const redirectTo = searchParams.get('redirect') || '/';
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.push('/');
+      router.push(redirectTo);
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, router, redirectTo]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,7 +35,10 @@ export default function LoginPage() {
 
     setLoading(true);
     try {
-      const { success, message } = await loginAction({ username, password });
+      const { success, message } = await loginAction(
+        { username, password },
+        redirectTo
+      );
       if (!success) {
         setError(message || 'Impossible de vous authentifier');
       }
@@ -45,11 +53,17 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="mb-8 text-center">
-          <div className="mb-6 inline-flex h-20 w-20 items-center justify-center rounded-full bg-blue-600">
-            <Package className="h-10 w-10 text-white" />
+          <div className="mb-6 inline-flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-lg">
+            <Image
+              src="/logo-70x70.png"
+              alt="Forestar Logo"
+              width={60}
+              height={60}
+              className="rounded-full"
+            />
           </div>
           <h1 className="mb-2 text-3xl font-bold text-gray-900">
-            Forestar Installer
+            Forestar Installation
           </h1>
           <p className="text-gray-600">
             Connectez-vous pour accéder à l&apos;interface d&apos;installation

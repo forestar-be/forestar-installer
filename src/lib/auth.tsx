@@ -6,10 +6,13 @@ import { useRouter } from 'next/navigation';
 interface AuthContextType {
   token: string;
   expiresAt: string;
-  loginAction: (data: {
-    username: string;
-    password: string;
-  }) => Promise<{ success: boolean; message: string }>;
+  loginAction: (
+    data: {
+      username: string;
+      password: string;
+    },
+    redirectTo?: string
+  ) => Promise<{ success: boolean; message: string }>;
   logOut: () => void;
   isAuthenticated: boolean;
 }
@@ -62,10 +65,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setIsAuthenticated(!!savedToken);
   }, []);
 
-  const loginAction = async (data: {
-    username: string;
-    password: string;
-  }): Promise<{ success: boolean; message: string }> => {
+  const loginAction = async (
+    data: {
+      username: string;
+      password: string;
+    },
+    redirectTo?: string
+  ): Promise<{ success: boolean; message: string }> => {
     try {
       const response = await fetch(`${API_URL}/installer/login`, {
         method: 'POST',
@@ -107,7 +113,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         setIsAuthenticated(true);
         localStorage.setItem('installer_token', String(res.token));
         localStorage.setItem('installer_expires_at', String(res.expiresAt));
-        router.push('/');
+        router.push(redirectTo || '/');
         return { success: true, message: 'Vous êtes connecté' };
       }
       return {

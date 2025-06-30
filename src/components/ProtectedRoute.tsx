@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 
 interface ProtectedRouteProps {
@@ -11,20 +11,21 @@ interface ProtectedRouteProps {
 export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const { isAuthenticated } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Petit délai pour permettre à l'auth de se charger
     const timer = setTimeout(() => {
       if (!isAuthenticated) {
-        router.push('/login');
+        router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
       } else {
         setIsLoading(false);
       }
     }, 100);
 
     return () => clearTimeout(timer);
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, router, pathname]);
 
   if (isLoading || !isAuthenticated) {
     return (

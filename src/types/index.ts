@@ -1,4 +1,3 @@
-// Types for the Forestar Installer application
 export enum InventoryCategory {
   ROBOT = 'ROBOT',
   PLUGIN = 'PLUGIN',
@@ -57,6 +56,20 @@ export interface PurchaseOrder {
   needsInstaller: boolean;
   installationNotes?: string;
 
+  // Installation completion details
+  installerName?: string;
+  installationCompletedAt?: Date;
+  robotInstalled?: boolean;
+  pluginInstalled?: boolean;
+  antennaInstalled?: boolean;
+  shelterInstalled?: boolean;
+  wireInstalled?: boolean;
+  antennaSupportInstalled?: boolean;
+  placementCompleted?: boolean;
+  missingItems?: string;
+  additionalComments?: string;
+  installationPdfId?: string;
+
   // Status fields
   hasAppointment: boolean;
   isInstalled: boolean;
@@ -73,7 +86,7 @@ export interface PurchaseOrder {
   photosPaths: string[];
 
   // Signature fields
-  clientSignature?: string;
+  clientInstallationSignature?: string;
   signatureTimestamp?: Date;
 
   eventId?: string; // Calendar integration
@@ -97,7 +110,7 @@ export interface InstallationFormData {
   additionalComments: string;
 
   // Client signature
-  clientSignature: string;
+  clientInstallationSignature: string;
   installerName: string;
   installationDate: Date;
 

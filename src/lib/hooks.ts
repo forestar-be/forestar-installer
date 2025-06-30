@@ -8,7 +8,7 @@ import {
 } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 
-export const usePurchaseOrders = () => {
+export const usePurchaseOrders = (isInstalled?: boolean) => {
   const [orders, setOrders] = useState<PurchaseOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -20,7 +20,7 @@ export const usePurchaseOrders = () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await fetchPurchaseOrders(token);
+      const data = await fetchPurchaseOrders(token, isInstalled);
       setOrders(data);
     } catch (err) {
       console.error('Error fetching purchase orders:', err);
@@ -32,7 +32,7 @@ export const usePurchaseOrders = () => {
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [token, isInstalled]);
 
   useEffect(() => {
     refetch();

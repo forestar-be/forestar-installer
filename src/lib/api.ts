@@ -1,4 +1,3 @@
-// API utilities for Forestar Installer
 import { PurchaseOrder } from '@/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
@@ -56,6 +55,19 @@ const apiRequest = async (
     console.warn('Error parsing response', response, error);
   }
 
+  // Handle JWT expiration - redirect to login with current page as redirect
+  if (
+    response.status === 403 &&
+    data?.message &&
+    data?.message === 'jwt expired'
+  ) {
+    // Use window.location to redirect to login with current page as redirect parameter
+    if (typeof window !== 'undefined') {
+      window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
+    }
+    return;
+  }
+
   if (!response.ok) {
     console.error(`${response.statusText} ${response.status}`, data);
     if (typeof data === 'string' && data) {
@@ -71,8 +83,17 @@ const apiRequest = async (
 };
 
 // Purchase Orders API functions
-export const fetchPurchaseOrders = (token: string): Promise<PurchaseOrder[]> =>
-  apiRequest('/installer/purchase-orders', 'GET', token);
+export const fetchPurchaseOrders = (
+  token: string,
+  isInstalled?: boolean
+): Promise<PurchaseOrder[]> => {
+  const params = new URLSearchParams();
+  if (isInstalled !== undefined) {
+    params.append('isInstalled', isInstalled.toString());
+  }
+  const endpoint = `/installer/purchase-orders${params.toString() ? `?${params.toString()}` : ''}`;
+  return apiRequest(endpoint, 'GET', token);
+};
 
 export const fetchPurchaseOrderById = (
   token: string,
@@ -86,7 +107,7 @@ export const completeInstallation = (
   data: {
     installationNotes?: string;
     installerName?: string;
-    clientSignature?: string;
+    clientInstallationSignature?: string;
     robotInstalled?: boolean;
     pluginInstalled?: boolean;
     antennaInstalled?: boolean;
@@ -99,3 +120,16 @@ export const completeInstallation = (
   }
 ): Promise<PurchaseOrder> =>
   apiRequest(`/installer/purchase-orders/${id}/complete`, 'PUT', token, data);
+
+export const downloadInstallationPdf = async (
+  token: string,
+  id: number
+): Promise<Blob> =>
+  apiRequest(
+    `/installer/purchase-orders/${id}/installation-pdf`,
+    'GET',
+    token,
+    undefined,
+    { Accept: 'application/pdf' },
+    false
+  );

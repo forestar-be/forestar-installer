@@ -9,8 +9,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { SignaturePadComponent } from '@/components/signature/SignaturePad';
-import { formatDate, formatDateTime } from '@/lib/utils';
+import { formatDate } from '@/lib/utils';
 import { completeInstallation, isHttpError } from '@/lib/api';
+import { compressImage } from '@/lib/imageUtils';
 import { useAuth } from '@/lib/auth';
 import { usePurchaseOrder } from '@/lib/hooks';
 import {
@@ -28,6 +29,7 @@ import {
   Antenna,
   FileText,
 } from 'lucide-react';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
 
 const installationSchema = z.object({
   robotInstalled: z.boolean(),
@@ -40,13 +42,15 @@ const installationSchema = z.object({
   installationNotes: z.string(),
   missingItems: z.string(),
   additionalComments: z.string(),
-  clientSignature: z.string().min(1, 'La signature du client est obligatoire'),
+  clientInstallationSignature: z
+    .string()
+    .min(1, 'La signature du client est obligatoire'),
   installerName: z.string().min(2, "Le nom de l'installateur est obligatoire"),
 });
 
 type InstallationForm = z.infer<typeof installationSchema>;
 
-export default function InstallationPage() {
+function InstallationPage() {
   const params = useParams();
   const router = useRouter();
   const { token } = useAuth();
@@ -69,7 +73,7 @@ export default function InstallationPage() {
       installationNotes: '',
       missingItems: '',
       additionalComments: '',
-      clientSignature: '',
+      clientInstallationSignature: '',
       installerName: '',
     },
   });
@@ -79,11 +83,33 @@ export default function InstallationPage() {
     setIsSubmitting(true);
     setSubmitError(null);
     try {
+      // Compress the signature image before sending to API
+      let compressedSignature = data.clientInstallationSignature;
+      if (
+        data.clientInstallationSignature &&
+        data.clientInstallationSignature.startsWith('data:image')
+      ) {
+        try {
+          compressedSignature = await compressImage(
+            data.clientInstallationSignature,
+            400, // Max width
+            200, // Max height
+            0.7 // Quality
+          );
+        } catch (compressionError) {
+          console.warn(
+            'Failed to compress signature, using original:',
+            compressionError
+          );
+          // Continue with original signature if compression fails
+        }
+      }
+
       // Send installation completion to API
       await completeInstallation(token, order.id, {
         installationNotes: data.installationNotes,
         installerName: data.installerName,
-        clientSignature: data.clientSignature,
+        clientInstallationSignature: compressedSignature,
         robotInstalled: data.robotInstalled,
         pluginInstalled: data.pluginInstalled,
         antennaInstalled: data.antennaInstalled,
@@ -100,7 +126,9 @@ export default function InstallationPage() {
     } catch (error) {
       console.error('Erreur lors de la finalisation:', error);
       if (isHttpError(error)) {
-        setSubmitError(error.message);
+        setSubmitError(
+          `Une erreur est survenue lors de la finalisation: ${error.message}`
+        );
       } else {
         setSubmitError("Erreur lors de la finalisation de l'installation");
       }
@@ -167,87 +195,18 @@ export default function InstallationPage() {
               Installation terminée avec succès !
             </h1>
             <p className="mb-8 text-lg text-gray-600">
-              Le bon d&apos;installation a été généré et envoyé automatiquement
-              au client
+              Le bon d&apos;installation a été généré
             </p>
-
-            {/* Installation Summary */}
-            <div className="mb-8 grid gap-6 md:grid-cols-2">
-              <div className="rounded-xl bg-gray-50 p-6 text-left">
-                <h3 className="mb-4 flex items-center font-semibold text-gray-900">
-                  <Package className="mr-2 h-5 w-5" />
-                  Résumé de l&apos;installation
-                </h3>
-                <div className="space-y-2 text-sm text-gray-600">
-                  <div className="flex justify-between">
-                    <span>Client:</span>
-                    <span className="font-medium text-gray-900">
-                      {order.clientFirstName} {order.clientLastName}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Robot:</span>
-                    <span className="font-medium text-gray-900">
-                      {order.robotInventory.name}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Date:</span>
-                    <span className="font-medium text-gray-900">
-                      {formatDateTime(new Date())}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Email envoyé à:</span>
-                    <span className="font-medium text-gray-900">
-                      {order.clientEmail}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-xl bg-blue-50 p-6 text-left">
-                <h4 className="mb-4 flex items-center font-semibold text-blue-900">
-                  <Mail className="mr-2 h-5 w-5" />
-                  Message envoyé au client
-                </h4>
-                <div className="space-y-2 text-sm text-blue-800">
-                  <p>
-                    &quot;Merci pour votre confiance ! Votre robot Forestar est
-                    maintenant installé et prêt à l&apos;emploi.&quot;
-                  </p>
-                  <p>
-                    &quot;N&apos;hésitez pas à nous contacter si vous avez des
-                    questions.&quot;
-                  </p>
-                  <p>
-                    &quot;Pensez à régler le solde de votre commande selon les
-                    modalités convenues.&quot;
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Guide d'utilisation */}
-            <div className="mb-8 rounded-xl border border-orange-200 bg-orange-50 p-6 text-left">
-              <h4 className="mb-3 flex items-center font-semibold text-orange-900">
-                <FileText className="mr-2 h-5 w-5" />
-                Guide d&apos;utilisation inclus
-              </h4>
-              <p className="mb-3 text-sm text-orange-800">
-                Un guide &quot;Que faire si mon robot s&apos;arrête ?&quot; a
-                été joint à l&apos;email client avec :
-              </p>
-              <ul className="ml-4 space-y-1 text-sm text-orange-800">
-                <li>• Vérifications de base et dépannage</li>
-                <li>• Codes d&apos;erreur courants</li>
-                <li>• Contacts support technique</li>
-                <li>• Conseils d&apos;entretien régulier</li>
-              </ul>
-            </div>
 
             {/* Action Buttons */}
             <div className="flex flex-col justify-center gap-4 sm:flex-row">
+              <button
+                onClick={() => router.push(`/complete/${order.id}`)}
+                className="flex flex-1 cursor-pointer items-center justify-center space-x-2 rounded-xl border-2 border-blue-200 bg-white px-8 py-3 font-semibold text-blue-600 transition-colors hover:border-blue-300 hover:bg-blue-50 sm:flex-none"
+              >
+                <FileText className="h-5 w-5" />
+                <span>Voir le détail de l&apos;installation</span>
+              </button>
               <button
                 onClick={() => router.push('/')}
                 className="flex flex-1 cursor-pointer items-center justify-center space-x-2 rounded-xl bg-blue-600 px-8 py-3 font-semibold text-white transition-colors hover:bg-blue-700 sm:flex-none"
@@ -333,13 +292,14 @@ export default function InstallationPage() {
                     <div className="flex items-center">
                       <Phone className="mr-2 h-4 w-4 text-gray-500" />
                       <span className="text-sm text-gray-700">
-                        {order.clientPhone}
+                        {order.clientPhone ||
+                          'Aucun numéro de téléphone fourni'}
                       </span>
                     </div>
                     <div className="flex items-center">
                       <Mail className="mr-2 h-4 w-4 text-gray-500" />
                       <span className="text-sm text-gray-700">
-                        {order.clientEmail}
+                        {order.clientEmail || 'Aucune adresse email fournie'}
                       </span>
                     </div>
                   </div>
@@ -801,14 +761,14 @@ export default function InstallationPage() {
           <div className="mb-8">
             <SignaturePadComponent
               onSignatureChange={signature =>
-                form.setValue('clientSignature', signature)
+                form.setValue('clientInstallationSignature', signature)
               }
-              value={form.watch('clientSignature')}
+              value={form.watch('clientInstallationSignature')}
             />
-            {form.formState.errors.clientSignature && (
+            {form.formState.errors.clientInstallationSignature && (
               <p className="mt-2 flex items-center text-sm text-red-600">
                 <span className="mr-2 h-2 w-2 rounded-full bg-red-600"></span>
-                {form.formState.errors.clientSignature.message}
+                {form.formState.errors.clientInstallationSignature.message}
               </p>
             )}
           </div>{' '}
@@ -845,5 +805,13 @@ export default function InstallationPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function Installation() {
+  return (
+    <ProtectedRoute>
+      <InstallationPage />
+    </ProtectedRoute>
   );
 }

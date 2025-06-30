@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Forestar Installer',
+  title: 'Forestar Installation',
   description: "Application d'installation pour robots Forestar",
 };
 
