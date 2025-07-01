@@ -557,7 +557,7 @@ function HomePage() {
         <div className="mx-auto max-w-7xl px-4 pb-12">
           <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
             <div className="border-b border-gray-100 px-6 py-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900">
                     {viewMode === 'pending'
@@ -570,16 +570,7 @@ function HomePage() {
                       : 'Cliquez sur une installation pour voir les détails'}
                   </p>
                 </div>
-                <div className="text-right">
-                  <p
-                    className={`text-2xl font-bold ${
-                      viewMode === 'pending'
-                        ? 'text-blue-600'
-                        : 'text-green-600'
-                    }`}
-                  >
-                    {filteredOrders.length}
-                  </p>
+                <div className="text-left sm:text-right">
                   <p className="text-sm text-gray-600">
                     {filteredOrders.length === 0
                       ? 'Aucun résultat'
@@ -618,14 +609,14 @@ function HomePage() {
                     <div className="flex-1">
                       <div className="mb-3 flex items-center">
                         <div
-                          className={`mr-3 flex h-10 w-10 items-center justify-center rounded-lg ${
+                          className={`mr-3 flex h-12 w-12 items-center justify-center rounded-lg sm:h-10 sm:w-10 ${
                             viewMode === 'pending'
                               ? 'bg-blue-100'
                               : 'bg-green-100'
                           }`}
                         >
                           <Package
-                            className={`h-5 w-5 ${
+                            className={`h-6 w-6 sm:h-5 sm:w-5 ${
                               viewMode === 'pending'
                                 ? 'text-blue-600'
                                 : 'text-green-600'
@@ -643,17 +634,26 @@ function HomePage() {
                       </div>
 
                       <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-                        <div className="flex items-center text-sm text-gray-600">
+                        <div
+                          id={`order-address-${order.id}`}
+                          className="flex items-center text-sm text-gray-600"
+                        >
                           <MapPin className="mr-2 h-4 w-4" />
                           <span>
                             {order.clientAddress}, {order.clientCity}
                           </span>
                         </div>
-                        <div className="flex items-center text-sm text-gray-600">
+                        <div
+                          id={`order-phone-${order.id}`}
+                          className="flex items-center text-sm text-gray-600"
+                        >
                           <Phone className="mr-2 h-4 w-4" />
                           <span>{order.clientPhone}</span>
                         </div>
-                        <div className="flex items-center text-sm text-gray-600">
+                        <div
+                          id={`order-email-${order.id}`}
+                          className="flex items-center text-sm text-gray-600"
+                        >
                           <Mail className="mr-2 h-4 w-4" />
                           <span>
                             {order.clientEmail ||
@@ -661,7 +661,10 @@ function HomePage() {
                           </span>
                         </div>
                         {order.installationDate && (
-                          <div className="flex items-center text-sm text-gray-600">
+                          <div
+                            id={`order-installation-date-${order.id}`}
+                            className="flex items-center text-sm text-gray-600"
+                          >
                             <Calendar className="mr-2 h-4 w-4" />
                             <span>
                               {formatDate(new Date(order.installationDate))}
@@ -670,12 +673,18 @@ function HomePage() {
                         )}
                       </div>
 
-                      <div className="flex items-center justify-between">
-                        <div>
+                      <div
+                        id={`order-client-row-${order.id}`}
+                        className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+                      >
+                        <div className="flex-1">
                           <p className="font-semibold text-gray-900">
                             {order.clientFirstName} {order.clientLastName}
                           </p>
-                          <div className="mt-1 flex items-center space-x-4">
+                          <div
+                            id={`order-accessories-${order.id}`}
+                            className="mt-2 flex flex-wrap items-center gap-2"
+                          >
                             <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
                               {order.robotInventory.name}
                             </span>
@@ -691,17 +700,23 @@ function HomePage() {
                             )}
                           </div>
                         </div>
-                        <div className="text-right">
+                        <div
+                          id={`order-deposit-${order.id}`}
+                          className="flex-shrink-0 text-left sm:text-right"
+                        >
                           <p className="text-lg font-bold text-gray-900">
                             {formatPrice(order.deposit)}
                           </p>
                           <p className="text-sm text-gray-600">Acompte versé</p>
-                        </div>{' '}
+                        </div>
                       </div>
                     </div>
 
                     {selectedOrderId === order.id && (
-                      <div className="absolute top-4 right-4">
+                      <div
+                        id={`order-selected-icon-${order.id}`}
+                        className="absolute top-4 right-4"
+                      >
                         <CheckCircle
                           className={`h-6 w-6 ${
                             viewMode === 'pending'

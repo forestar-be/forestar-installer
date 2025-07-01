@@ -794,7 +794,7 @@ function InstallationPage() {
                 </>
               ) : (
                 <>
-                  <FileText className="h-6 w-6" />
+                  <FileText className="h-7 w-7 sm:h-6 sm:w-6" />
                   <span>
                     Finaliser l&apos;installation et envoyer au client
                   </span>
