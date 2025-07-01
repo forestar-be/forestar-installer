@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useAuth } from '@/lib/auth';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Lock, User } from 'lucide-react';
 import Image from 'next/image';
 
-export default function LoginPage() {
+function LoginForm() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -154,5 +154,38 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Loading component for Suspense fallback
+function LoginLoading() {
+  return (
+    <div className="flex min-h-screen items-center justify-center px-4">
+      <div className="w-full max-w-md">
+        <div className="mb-8 text-center">
+          <div className="mb-6 inline-flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-lg">
+            <Image
+              src="/logo-70x70.png"
+              alt="Forestar Logo"
+              width={60}
+              height={60}
+              className="rounded-full"
+            />
+          </div>
+          <h1 className="mb-2 text-3xl font-bold text-gray-900">
+            Forestar Installation
+          </h1>
+          <p className="text-gray-600">Chargement...</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<LoginLoading />}>
+      <LoginForm />
+    </Suspense>
   );
 }
