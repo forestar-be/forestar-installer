@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -39,7 +39,9 @@ const installationSchema = z.object({
   wireInstalled: z.boolean(),
   antennaSupportInstalled: z.boolean(),
   placementCompleted: z.boolean(),
-  installationNotes: z.string(),
+  installationNotes: z
+    .string()
+    .min(1, "Les notes d'installation sont obligatoires"),
   missingItems: z.string(),
   additionalComments: z.string(),
   clientInstallationSignature: z
@@ -55,29 +57,71 @@ function InstallationPage() {
   const router = useRouter();
   const { token } = useAuth();
   const orderId = parseInt(params.id as string);
-  const { order, loading, error } = usePurchaseOrder(orderId);
+  const { order, loading, error } = usePurchaseOrder(orderId, false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [clientEmail, setClientEmail] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
 
-  const form = useForm<InstallationForm>({
-    resolver: zodResolver(installationSchema),
-    defaultValues: {
-      robotInstalled: false,
-      pluginInstalled: false,
-      antennaInstalled: false,
-      shelterInstalled: false,
-      wireInstalled: false,
-      antennaSupportInstalled: false,
-      placementCompleted: false,
-      installationNotes: '',
-      missingItems: '',
-      additionalComments: '',
-      clientInstallationSignature: '',
-      installerName: '',
-    },
-  });
-  const onSubmit = async (data: InstallationForm) => {
+  // Function to validate email format
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  // Function to check if nothing was installed
+  const checkIfNothingInstalled = (): boolean => {
+    const data = form.getValues();
+    const installationItems = [
+      data.robotInstalled,
+      ...(order?.plugin ? [data.pluginInstalled] : []),
+      ...(order?.antenna ? [data.antennaInstalled] : []),
+      ...(order?.shelter ? [data.shelterInstalled] : []),
+      ...(order?.hasWire ? [data.wireInstalled] : []),
+      ...(order?.hasAntennaSupport ? [data.antennaSupportInstalled] : []),
+      ...(order?.hasPlacement ? [data.placementCompleted] : []),
+    ];
+
+    return !installationItems.some(item => item === true);
+  };
+
+  // Function to handle email submission from modal
+  const handleEmailSubmit = () => {
+    if (!clientEmail.trim()) {
+      setEmailError("L'adresse email est obligatoire");
+      return;
+    }
+    if (!validateEmail(clientEmail)) {
+      setEmailError('Veuillez saisir une adresse email valide');
+      return;
+    }
+    setEmailError('');
+    setShowEmailModal(false);
+    // Proceed with installation completion
+    proceedWithInstallation();
+  };
+
+  // Function to handle confirmation of nothing installed
+  const handleNothingInstalledConfirmation = () => {
+    setShowConfirmationModal(false);
+
+    // Check if client email exists, if not show modal
+    if (!order?.clientEmail) {
+      setShowEmailModal(true);
+      return;
+    }
+
+    // If email exists, proceed directly
+    setClientEmail(order.clientEmail);
+    proceedWithInstallation();
+  };
+
+  // Function to actually complete the installation
+  const proceedWithInstallation = async () => {
+    const data = form.getValues();
     if (!order || !token) return;
 
     setIsSubmitting(true);
@@ -119,6 +163,7 @@ function InstallationPage() {
         placementCompleted: data.placementCompleted,
         missingItems: data.missingItems,
         additionalComments: data.additionalComments,
+        clientEmail: clientEmail || undefined,
       });
 
       // Show success screen
@@ -135,6 +180,58 @@ function InstallationPage() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const form = useForm<InstallationForm>({
+    resolver: zodResolver(installationSchema),
+    defaultValues: {
+      robotInstalled: false,
+      pluginInstalled: false,
+      antennaInstalled: false,
+      shelterInstalled: false,
+      wireInstalled: false,
+      antennaSupportInstalled: false,
+      placementCompleted: false,
+      installationNotes: '',
+      missingItems: '',
+      additionalComments: '',
+      clientInstallationSignature: '',
+      installerName: '',
+    },
+  });
+
+  // Prevent tab/window closing during submission
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isSubmitting) {
+        e.preventDefault();
+        e.returnValue =
+          'Une finalisation est en cours. Êtes-vous sûr de vouloir quitter ?';
+        return 'Une finalisation est en cours. Êtes-vous sûr de vouloir quitter ?';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isSubmitting]);
+  const onSubmit = async () => {
+    if (!order || !token) return;
+
+    // Check if nothing was installed and show confirmation modal
+    if (checkIfNothingInstalled()) {
+      setShowConfirmationModal(true);
+      return;
+    }
+
+    // Check if client email exists, if not show modal
+    if (!order.clientEmail) {
+      setShowEmailModal(true);
+      return;
+    }
+
+    // If email exists, proceed directly
+    setClientEmail(order.clientEmail);
+    proceedWithInstallation();
   };
   if (loading) {
     return (
@@ -229,7 +326,22 @@ function InstallationPage() {
     );
   }
   return (
-    <div className="min-h-screen">
+    <div className="relative min-h-screen">
+      {/* Loading overlay during submission */}
+      {isSubmitting && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/30 backdrop-blur-sm">
+          <div className="rounded-xl border border-gray-200 bg-white p-8 text-center shadow-xl">
+            <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
+            <h3 className="mb-2 text-lg font-semibold text-gray-900">
+              Finalisation en cours...
+            </h3>
+            <p className="text-gray-600">
+              Veuillez patienter pendant l&apos;envoi des données
+            </p>
+          </div>
+        </div>
+      )}
+
       <div className="mx-auto max-w-5xl px-4 py-6">
         {/* Header */}
         <div className="mb-6 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
@@ -256,7 +368,10 @@ function InstallationPage() {
           </div>
         </div>
 
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className={`space-y-6 ${isSubmitting ? 'pointer-events-none' : ''}`}
+        >
           {/* Client Information */}
           <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
             <div className="mb-6 flex items-center">
@@ -339,7 +454,9 @@ function InstallationPage() {
             </div>
           </div>
           {/* Equipment Checklist */}
-          <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+          <div
+            className={`rounded-2xl border border-gray-100 bg-white p-6 shadow-sm ${isSubmitting ? 'pointer-events-none opacity-70' : ''}`}
+          >
             <div className="mb-6 flex items-center">
               <div className="mr-3 flex h-10 w-10 items-center justify-center rounded-xl bg-green-100">
                 <CheckCircle2 className="h-5 w-5 text-green-600" />
@@ -365,11 +482,12 @@ function InstallationPage() {
                       !form.watch('robotInstalled')
                     )
                   }
+                  disabled={isSubmitting}
                   className={`w-full cursor-pointer rounded-xl border-2 p-4 text-left transition-all duration-200 ${
                     form.watch('robotInstalled')
                       ? 'border-green-300 bg-green-50'
                       : 'border-gray-200 bg-white hover:border-gray-300'
-                  }`}
+                  } ${isSubmitting ? 'cursor-not-allowed opacity-50' : ''}`}
                 >
                   <div className="flex items-center space-x-4">
                     <div
@@ -697,13 +815,19 @@ function InstallationPage() {
             <div className="grid gap-6">
               <div>
                 <label className="mb-3 block text-sm font-semibold text-gray-700">
-                  Notes d&apos;installation
+                  Notes d&apos;installation *
                 </label>
                 <Textarea
                   {...form.register('installationNotes')}
                   placeholder="Détails de l'installation, observations particulières..."
                   className="min-h-[120px] rounded-xl border-2 border-gray-200 transition-colors focus:border-blue-500 focus:ring-0"
                 />
+                {form.formState.errors.installationNotes && (
+                  <p className="mt-2 flex items-center text-sm text-red-600">
+                    <span className="mr-2 h-2 w-2 rounded-full bg-red-600"></span>
+                    {form.formState.errors.installationNotes.message}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -764,6 +888,7 @@ function InstallationPage() {
                 form.setValue('clientInstallationSignature', signature)
               }
               value={form.watch('clientInstallationSignature')}
+              disabled={isSubmitting}
             />
             {form.formState.errors.clientInstallationSignature && (
               <p className="mt-2 flex items-center text-sm text-red-600">
@@ -803,6 +928,100 @@ function InstallationPage() {
             </button>
           </div>
         </form>
+
+        {/* Email Modal */}
+        {showEmailModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+            <div className="mx-4 w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-xl">
+              <div className="mb-6 text-center">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-orange-100">
+                  <Mail className="h-8 w-8 text-orange-600" />
+                </div>
+                <h3 className="mb-2 text-xl font-bold text-gray-900">
+                  Adresse email requise
+                </h3>
+                <p className="text-gray-600">
+                  Veuillez saisir l&apos;adresse email du client pour
+                  l&apos;envoi du bon d&apos;installation
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-gray-700">
+                    Adresse email du client *
+                  </label>
+                  <Input
+                    type="email"
+                    value={clientEmail}
+                    onChange={e => setClientEmail(e.target.value)}
+                    placeholder="exemple@email.com"
+                    className="rounded-xl border-2 border-gray-200 transition-colors focus:border-orange-500 focus:ring-0"
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') {
+                        handleEmailSubmit();
+                      }
+                    }}
+                  />
+                  {emailError && (
+                    <p className="mt-2 text-sm text-red-600">{emailError}</p>
+                  )}
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowEmailModal(false)}
+                    className="flex-1 cursor-pointer rounded-xl border-2 border-gray-300 px-4 py-3 font-semibold text-gray-700 transition-colors hover:border-gray-400 hover:text-gray-900"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    onClick={handleEmailSubmit}
+                    className="flex-1 cursor-pointer rounded-xl bg-orange-600 px-4 py-3 font-semibold text-white transition-colors hover:bg-orange-700"
+                  >
+                    Continuer
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Nothing Installed Confirmation Modal */}
+        {showConfirmationModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+            <div className="mx-4 w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-xl">
+              <div className="mb-6 text-center">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-yellow-100">
+                  <span className="text-2xl">⚠️</span>
+                </div>
+                <h3 className="mb-2 text-xl font-bold text-gray-900">
+                  Aucun élément installé
+                </h3>
+                <p className="text-gray-600">
+                  Vous n&apos;avez coché aucun élément dans la checklist
+                  d&apos;installation. Confirmez-vous que rien n&apos;a été
+                  installé ?
+                </p>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowConfirmationModal(false)}
+                  className="flex-1 cursor-pointer rounded-xl border-2 border-gray-300 px-4 py-3 font-semibold text-gray-700 transition-colors hover:border-gray-400 hover:text-gray-900"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={handleNothingInstalledConfirmation}
+                  className="flex-1 cursor-pointer rounded-xl bg-yellow-600 px-4 py-3 font-semibold text-white transition-colors hover:bg-yellow-700"
+                >
+                  Confirmer
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

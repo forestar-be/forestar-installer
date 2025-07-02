@@ -41,7 +41,7 @@ export const usePurchaseOrders = (isInstalled?: boolean) => {
   return { orders, loading, error, refetch };
 };
 
-export const usePurchaseOrder = (id: number) => {
+export const usePurchaseOrder = (id: number, isInstalled?: boolean) => {
   const [order, setOrder] = useState<PurchaseOrder | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -53,7 +53,7 @@ export const usePurchaseOrder = (id: number) => {
     try {
       setLoading(true);
       setError(null);
-      const data = await fetchPurchaseOrderById(token, id);
+      const data = await fetchPurchaseOrderById(token, id, isInstalled);
       setOrder(data);
     } catch (err) {
       console.error('Error fetching purchase order:', err);

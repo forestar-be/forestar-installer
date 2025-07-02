@@ -97,9 +97,14 @@ export const fetchPurchaseOrders = (
 
 export const fetchPurchaseOrderById = (
   token: string,
-  id: number
+  id: number,
+  isInstalled?: boolean
 ): Promise<PurchaseOrder> =>
-  apiRequest(`/installer/purchase-orders/${id}`, 'GET', token);
+  apiRequest(
+    `/installer/purchase-orders/${id}?isInstalled=${isInstalled}`,
+    'GET',
+    token
+  );
 
 export const completeInstallation = (
   token: string,
@@ -117,6 +122,7 @@ export const completeInstallation = (
     placementCompleted?: boolean;
     missingItems?: string;
     additionalComments?: string;
+    clientEmail?: string;
   }
 ): Promise<PurchaseOrder> =>
   apiRequest(`/installer/purchase-orders/${id}/complete`, 'PUT', token, data);

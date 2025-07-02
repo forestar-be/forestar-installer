@@ -34,7 +34,7 @@ function CompletePage() {
   const router = useRouter();
   const { token } = useAuth();
   const orderId = parseInt(params.id as string);
-  const { order, loading, error } = usePurchaseOrder(orderId);
+  const { order, loading, error } = usePurchaseOrder(orderId, true);
   const [isDownloading, setIsDownloading] = useState(false);
 
   const handleDownloadPdf = async () => {
@@ -323,67 +323,73 @@ function CompletePage() {
                       </tr>
                     )}
 
-                    <tr>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center">
-                          <Cable className="mr-3 h-5 w-5 text-gray-400" />
-                          <span className="text-sm text-gray-700">
-                            Fil périmétrique
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-700">
-                        {order.wireLength}m
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center">
-                          {getStatusIcon(order.wireInstalled)}
-                          <span className="ml-2 text-sm text-gray-600">
-                            {getStatusText(order.wireInstalled)}
-                          </span>
-                        </div>
-                      </td>
-                    </tr>
+                    {order.hasWire && (
+                      <tr>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center">
+                            <Cable className="mr-3 h-5 w-5 text-gray-400" />
+                            <span className="text-sm text-gray-700">
+                              Fil périmétrique
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-700">
+                          {order.wireLength}m
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center">
+                            {getStatusIcon(order.wireInstalled)}
+                            <span className="ml-2 text-sm text-gray-600">
+                              {getStatusText(order.wireInstalled)}
+                            </span>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
 
-                    <tr>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center">
-                          <Antenna className="mr-3 h-5 w-5 text-gray-400" />
-                          <span className="text-sm text-gray-700">
-                            Support d&apos;antenne
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-700">-</td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center">
-                          {getStatusIcon(order.antennaSupportInstalled)}
-                          <span className="ml-2 text-sm text-gray-600">
-                            {getStatusText(order.antennaSupportInstalled)}
-                          </span>
-                        </div>
-                      </td>
-                    </tr>
+                    {order.hasAntennaSupport && (
+                      <tr>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center">
+                            <Antenna className="mr-3 h-5 w-5 text-gray-400" />
+                            <span className="text-sm text-gray-700">
+                              Support d&apos;antenne
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-700">-</td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center">
+                            {getStatusIcon(order.antennaSupportInstalled)}
+                            <span className="ml-2 text-sm text-gray-600">
+                              {getStatusText(order.antennaSupportInstalled)}
+                            </span>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
 
-                    <tr>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center">
-                          <MapPin className="mr-3 h-5 w-5 text-gray-400" />
-                          <span className="text-sm text-gray-700">
-                            Mise en place
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-700">-</td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center">
-                          {getStatusIcon(order.placementCompleted)}
-                          <span className="ml-2 text-sm text-gray-600">
-                            {getStatusText(order.placementCompleted)}
-                          </span>
-                        </div>
-                      </td>
-                    </tr>
+                    {order.hasPlacement && (
+                      <tr>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center">
+                            <MapPin className="mr-3 h-5 w-5 text-gray-400" />
+                            <span className="text-sm text-gray-700">
+                              Mise en place
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-700">-</td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center">
+                            {getStatusIcon(order.placementCompleted)}
+                            <span className="ml-2 text-sm text-gray-600">
+                              {getStatusText(order.placementCompleted)}
+                            </span>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
