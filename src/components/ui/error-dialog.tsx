@@ -57,7 +57,7 @@ export function ErrorDialog({
           <p className="mb-4 text-base text-gray-600">{message}</p>
           <p className="text-sm text-gray-500">
             Si le problème persiste, contactez le support technique en incluant
-            les détails de l'erreur ci-dessous.
+            les détails de l&apos;erreur ci-dessous.
           </p>
         </div>
 
