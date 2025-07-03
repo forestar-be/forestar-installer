@@ -1,7 +1,8 @@
 'use client';
 
-import { LogOut, Package, CheckCircle } from 'lucide-react';
+import { LogOut, Package, CheckCircle, Settings } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
+import { usePathname, useRouter } from 'next/navigation';
 import Image from 'next/image';
 
 interface HeaderProps {
@@ -16,6 +17,24 @@ export const Header = ({
   onViewModeChange,
 }: HeaderProps) => {
   const { logOut } = useAuth();
+  const pathname = usePathname();
+  const router = useRouter();
+
+  // Détermine si on est sur la page des paramètres
+  const isSettingsPage = pathname === '/installation-info';
+
+  // Toujours afficher les boutons toggle sur la page des paramètres
+  const shouldShowToggle = showToggle || isSettingsPage;
+
+  const handleViewModeChange = (mode: 'pending' | 'completed') => {
+    if (isSettingsPage) {
+      // Si on est sur la page des paramètres, naviguer vers la page d'accueil avec le bon mode
+      router.push(`/?view=${mode}`);
+    } else {
+      // Si on est sur la page d'accueil, utiliser la fonction callback
+      onViewModeChange?.(mode);
+    }
+  };
 
   const handleLogout = () => {
     if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
@@ -42,12 +61,12 @@ export const Header = ({
           </div>
 
           <div className="flex items-center space-x-4">
-            {showToggle && (
+            {shouldShowToggle && (
               <div className="flex cursor-pointer rounded-lg border border-gray-200 bg-gray-50 p-1 transition-all duration-200 hover:shadow-md">
                 <button
-                  onClick={() => onViewModeChange?.('pending')}
+                  onClick={() => handleViewModeChange('pending')}
                   className={`flex cursor-pointer items-center rounded-md px-4 py-2 text-sm font-medium whitespace-nowrap transition-all ${
-                    viewMode === 'pending'
+                    !isSettingsPage && viewMode === 'pending'
                       ? 'bg-white text-blue-600 shadow-sm'
                       : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                   }`}
@@ -55,9 +74,9 @@ export const Header = ({
                   <Package className="mr-2 h-4 w-4" />À installer
                 </button>
                 <button
-                  onClick={() => onViewModeChange?.('completed')}
+                  onClick={() => handleViewModeChange('completed')}
                   className={`flex cursor-pointer items-center rounded-md px-4 py-2 text-sm font-medium whitespace-nowrap transition-all ${
-                    viewMode === 'completed'
+                    !isSettingsPage && viewMode === 'completed'
                       ? 'bg-white text-green-600 shadow-sm'
                       : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                   }`}
@@ -67,6 +86,17 @@ export const Header = ({
                 </button>
               </div>
             )}
+
+            <a
+              href="/installation-info"
+              className={`flex h-[42px] cursor-pointer items-center rounded-md border border-gray-200 px-4 py-3 text-sm font-medium whitespace-nowrap transition-all duration-200 hover:shadow-md focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none ${
+                isSettingsPage
+                  ? 'bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 hover:from-blue-100 hover:to-blue-200'
+                  : 'bg-gradient-to-r from-gray-50 to-gray-100 text-gray-700 hover:from-gray-100 hover:to-gray-200'
+              }`}
+            >
+              <Settings className="h-4 w-4" />
+            </a>
 
             <button
               onClick={handleLogout}

@@ -1,4 +1,8 @@
-import { PurchaseOrder } from '@/types';
+import {
+  PurchaseOrder,
+  InstallationInfoSection,
+  InstallationInfoItem,
+} from '@/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -133,6 +137,117 @@ export const downloadInstallationPdf = async (
 ): Promise<Blob> =>
   apiRequest(
     `/installer/purchase-orders/${id}/installation-pdf`,
+    'GET',
+    token,
+    undefined,
+    { Accept: 'application/pdf' },
+    false
+  );
+
+// Installation Info Management API functions
+export const fetchInstallationInfoSections = (
+  token: string
+): Promise<InstallationInfoSection[]> =>
+  apiRequest('/installer/installation-info/sections', 'GET', token);
+
+export const fetchAllInstallationInfoSections = (
+  token: string
+): Promise<InstallationInfoSection[]> =>
+  apiRequest('/installer/installation-info/sections/all', 'GET', token);
+
+export const fetchInstallationInfoSectionById = (
+  token: string,
+  id: number
+): Promise<InstallationInfoSection> =>
+  apiRequest(`/installer/installation-info/sections/${id}`, 'GET', token);
+
+export const createInstallationInfoSection = (
+  token: string,
+  data: {
+    title: string;
+    color?: string;
+    order?: number;
+    isActive?: boolean;
+  }
+): Promise<InstallationInfoSection> =>
+  apiRequest('/installer/installation-info/sections', 'POST', token, data);
+
+export const updateInstallationInfoSection = (
+  token: string,
+  id: number,
+  data: {
+    title?: string;
+    color?: string;
+    order?: number;
+    isActive?: boolean;
+  }
+): Promise<InstallationInfoSection> =>
+  apiRequest(`/installer/installation-info/sections/${id}`, 'PUT', token, data);
+
+export const deleteInstallationInfoSection = (
+  token: string,
+  id: number
+): Promise<{ message: string }> =>
+  apiRequest(`/installer/installation-info/sections/${id}`, 'DELETE', token);
+
+export const createInstallationInfoItem = (
+  token: string,
+  sectionId: number,
+  data: {
+    content: string;
+    type: 'TITLE' | 'CHAPTER' | 'BULLET_POINT' | 'TEXT';
+    order?: number;
+  }
+): Promise<InstallationInfoItem> =>
+  apiRequest(
+    `/installer/installation-info/sections/${sectionId}/items`,
+    'POST',
+    token,
+    data
+  );
+
+export const updateInstallationInfoItem = (
+  token: string,
+  id: number,
+  data: {
+    content?: string;
+    type?: 'TITLE' | 'CHAPTER' | 'BULLET_POINT' | 'TEXT';
+    order?: number;
+  }
+): Promise<InstallationInfoItem> =>
+  apiRequest(`/installer/installation-info/items/${id}`, 'PUT', token, data);
+
+export const deleteInstallationInfoItem = (
+  token: string,
+  id: number
+): Promise<{ message: string }> =>
+  apiRequest(`/installer/installation-info/items/${id}`, 'DELETE', token);
+
+export const reorderInstallationInfoSections = (
+  token: string,
+  sectionIds: number[]
+): Promise<{ message: string }> =>
+  apiRequest('/installer/installation-info/sections/reorder', 'PUT', token, {
+    sectionIds,
+  });
+
+export const reorderInstallationInfoItems = (
+  token: string,
+  sectionId: number,
+  itemIds: number[]
+): Promise<{ message: string }> =>
+  apiRequest(
+    `/installer/installation-info/sections/${sectionId}/items/reorder`,
+    'PUT',
+    token,
+    { itemIds }
+  );
+
+export const downloadTestInstallationPdf = async (
+  token: string
+): Promise<Blob> =>
+  apiRequest(
+    `/installer/test/installation-pdf`,
     'GET',
     token,
     undefined,

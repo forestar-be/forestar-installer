@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useMemo, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { formatDate, formatPrice } from '@/lib/utils';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { Header } from '@/components/Header';
@@ -62,6 +62,15 @@ function HomePage() {
   });
 
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Lire le paramètre 'view' depuis l'URL au chargement
+  useEffect(() => {
+    const viewParam = searchParams.get('view');
+    if (viewParam === 'pending' || viewParam === 'completed') {
+      setViewMode(viewParam);
+    }
+  }, [searchParams]);
   const { orders, loading, error, refetch } = usePurchaseOrders(
     viewMode === 'completed' ? true : false
   );

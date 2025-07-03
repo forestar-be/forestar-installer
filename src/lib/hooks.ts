@@ -1,9 +1,10 @@
 // Custom hooks for API calls
 import { useState, useEffect, useCallback } from 'react';
-import { PurchaseOrder } from '@/types';
+import { PurchaseOrder, InstallationInfoSection } from '@/types';
 import {
   fetchPurchaseOrders,
   fetchPurchaseOrderById,
+  fetchAllInstallationInfoSections,
   isHttpError,
 } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
@@ -71,11 +72,44 @@ export const usePurchaseOrder = (id: number, isInstalled?: boolean) => {
     } finally {
       setLoading(false);
     }
-  }, [token, id]);
+  }, [token, id, isInstalled]);
 
   useEffect(() => {
     refetch();
   }, [refetch]);
 
   return { order, loading, error, refetch };
+};
+
+export const useInstallationInfoSections = () => {
+  const [sections, setSections] = useState<InstallationInfoSection[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { token } = useAuth();
+
+  const refetch = useCallback(async () => {
+    if (!token) return;
+
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await fetchAllInstallationInfoSections(token);
+      setSections(data);
+    } catch (err) {
+      console.error('Error fetching installation info sections:', err);
+      if (isHttpError(err)) {
+        setError(err.message);
+      } else {
+        setError("Erreur lors du chargement des sections d'information");
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
+
+  return { sections, loading, error, refetch, setSections };
 };

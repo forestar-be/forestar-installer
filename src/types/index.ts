@@ -124,3 +124,25 @@ export interface InstallationReceipt {
   generatedAt: Date;
   installerName: string;
 }
+
+// Installation Info Management Types
+export interface InstallationInfoItem {
+  id: number;
+  content: string;
+  type: 'TITLE' | 'CHAPTER' | 'BULLET_POINT' | 'TEXT';
+  order: number;
+  sectionId: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface InstallationInfoSection {
+  id: number;
+  title: string;
+  color: 'BLUE' | 'GREEN' | 'YELLOW' | 'RED' | 'GRAY' | 'ORANGE' | 'PURPLE';
+  order: number;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  items: InstallationInfoItem[];
+}
