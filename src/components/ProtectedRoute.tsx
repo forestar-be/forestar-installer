@@ -29,14 +29,14 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
       const timer = setTimeout(() => {
         setShowLoading(false);
         if (!isAuthenticated) {
-          router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
+          router.push(`/connexion?redirect=${encodeURIComponent(pathname)}`);
         }
       }, 100);
 
       return () => clearTimeout(timer);
     } else if (!isAuthenticated) {
       // If the user was authenticated before but not anymore, redirect immediately
-      router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
+      router.push(`/connexion?redirect=${encodeURIComponent(pathname)}`);
     }
   }, [isAuthenticated, router, pathname]);
 

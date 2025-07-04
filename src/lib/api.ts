@@ -2,6 +2,8 @@ import {
   PurchaseOrder,
   InstallationInfoSection,
   InstallationInfoItem,
+  PaymentInfoSection,
+  PaymentInfoItem,
 } from '@/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
@@ -67,7 +69,7 @@ const apiRequest = async (
   ) {
     // Use window.location to redirect to login with current page as redirect parameter
     if (typeof window !== 'undefined') {
-      window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
+      window.location.href = `/connexion?redirect=${encodeURIComponent(window.location.pathname)}`;
     }
     return;
   }
@@ -253,4 +255,103 @@ export const downloadTestInstallationPdf = async (
     undefined,
     { Accept: 'application/pdf' },
     false
+  );
+
+// Payment Info Management API functions
+export const fetchPaymentInfoSections = (
+  token: string
+): Promise<PaymentInfoSection[]> =>
+  apiRequest('/installer/payment-info/sections', 'GET', token);
+
+export const fetchAllPaymentInfoSections = (
+  token: string
+): Promise<PaymentInfoSection[]> =>
+  apiRequest('/installer/payment-info/sections/all', 'GET', token);
+
+export const fetchPaymentInfoSectionById = (
+  token: string,
+  id: number
+): Promise<PaymentInfoSection> =>
+  apiRequest(`/installer/payment-info/sections/${id}`, 'GET', token);
+
+export const createPaymentInfoSection = (
+  token: string,
+  data: {
+    title: string;
+    color?: string;
+    order?: number;
+    isActive?: boolean;
+  }
+): Promise<PaymentInfoSection> =>
+  apiRequest('/installer/payment-info/sections', 'POST', token, data);
+
+export const updatePaymentInfoSection = (
+  token: string,
+  id: number,
+  data: {
+    title?: string;
+    color?: string;
+    order?: number;
+    isActive?: boolean;
+  }
+): Promise<PaymentInfoSection> =>
+  apiRequest(`/installer/payment-info/sections/${id}`, 'PUT', token, data);
+
+export const deletePaymentInfoSection = (
+  token: string,
+  id: number
+): Promise<{ message: string }> =>
+  apiRequest(`/installer/payment-info/sections/${id}`, 'DELETE', token);
+
+export const createPaymentInfoItem = (
+  token: string,
+  sectionId: number,
+  data: {
+    content: string;
+    type: 'TITLE' | 'CHAPTER' | 'BULLET_POINT' | 'TEXT';
+    order?: number;
+  }
+): Promise<PaymentInfoItem> =>
+  apiRequest(
+    `/installer/payment-info/sections/${sectionId}/items`,
+    'POST',
+    token,
+    data
+  );
+
+export const updatePaymentInfoItem = (
+  token: string,
+  id: number,
+  data: {
+    content?: string;
+    type?: 'TITLE' | 'CHAPTER' | 'BULLET_POINT' | 'TEXT';
+    order?: number;
+  }
+): Promise<PaymentInfoItem> =>
+  apiRequest(`/installer/payment-info/items/${id}`, 'PUT', token, data);
+
+export const deletePaymentInfoItem = (
+  token: string,
+  id: number
+): Promise<{ message: string }> =>
+  apiRequest(`/installer/payment-info/items/${id}`, 'DELETE', token);
+
+export const reorderPaymentInfoSections = (
+  token: string,
+  sectionIds: number[]
+): Promise<{ message: string }> =>
+  apiRequest('/installer/payment-info/sections/reorder', 'PUT', token, {
+    sectionIds,
+  });
+
+export const reorderPaymentInfoItems = (
+  token: string,
+  sectionId: number,
+  itemIds: number[]
+): Promise<{ message: string }> =>
+  apiRequest(
+    `/installer/payment-info/sections/${sectionId}/items/reorder`,
+    'PUT',
+    token,
+    { itemIds }
   );

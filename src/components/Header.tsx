@@ -21,7 +21,7 @@ export const Header = ({
   const router = useRouter();
 
   // Détermine si on est sur la page des paramètres
-  const isSettingsPage = pathname === '/installation-info';
+  const isSettingsPage = pathname === '/parametres';
 
   // Toujours afficher les boutons toggle sur la page des paramètres
   const shouldShowToggle = showToggle || isSettingsPage;
@@ -88,7 +88,7 @@ export const Header = ({
             )}
 
             <a
-              href="/installation-info"
+              href="/parametres"
               className={`flex h-[42px] cursor-pointer items-center rounded-md border border-gray-200 px-4 py-3 text-sm font-medium whitespace-nowrap transition-all duration-200 hover:shadow-md focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none ${
                 isSettingsPage
                   ? 'bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 hover:from-blue-100 hover:to-blue-200'

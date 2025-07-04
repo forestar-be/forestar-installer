@@ -80,7 +80,7 @@ function HomePage() {
       if (viewMode === 'completed') {
         router.push(`/complete/${selectedOrderId}`);
       } else {
-        router.push(`/install/${selectedOrderId}`);
+        router.push(`/installation/${selectedOrderId}`);
       }
     }
   };

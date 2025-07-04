@@ -1,7 +1,7 @@
 import { Header } from '@/components/Header';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 
-export default function InstallationInfoLayout({
+export default function ParametresLayout({
   children,
 }: {
   children: React.ReactNode;

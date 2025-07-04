@@ -146,3 +146,25 @@ export interface InstallationInfoSection {
   updatedAt: Date;
   items: InstallationInfoItem[];
 }
+
+// Payment Info Management Types
+export interface PaymentInfoItem {
+  id: number;
+  content: string;
+  type: 'TITLE' | 'CHAPTER' | 'BULLET_POINT' | 'TEXT';
+  order: number;
+  sectionId: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface PaymentInfoSection {
+  id: number;
+  title: string;
+  color: 'BLUE' | 'GREEN' | 'YELLOW' | 'RED' | 'GRAY' | 'ORANGE' | 'PURPLE';
+  order: number;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  items: PaymentInfoItem[];
+}

@@ -136,7 +136,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setIsAuthenticated(false);
     localStorage.removeItem('installer_token');
     localStorage.removeItem('installer_expires_at');
-    router.push('/login');
+    router.push('/connexion');
   };
 
   return (
