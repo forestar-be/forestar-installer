@@ -129,6 +129,7 @@ export const completeInstallation = (
     missingItems?: string;
     additionalComments?: string;
     clientEmail?: string;
+    serialNumber?: string;
   }
 ): Promise<PurchaseOrder> =>
   apiRequest(`/installer/purchase-orders/${id}/complete`, 'PUT', token, data);

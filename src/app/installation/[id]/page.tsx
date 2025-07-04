@@ -48,6 +48,7 @@ const installationSchema = z.object({
     .string()
     .min(1, 'La signature du client est obligatoire'),
   installerName: z.string().min(2, "Le nom de l'installateur est obligatoire"),
+  serialNumber: z.string().optional(),
 });
 
 type InstallationForm = z.infer<typeof installationSchema>;
@@ -147,9 +148,7 @@ function InstallationPage() {
           );
           // Continue with original signature if compression fails
         }
-      }
-
-      // Send installation completion to API
+      } // Send installation completion to API
       await completeInstallation(token, order.id, {
         installationNotes: data.installationNotes,
         installerName: data.installerName,
@@ -164,6 +163,7 @@ function InstallationPage() {
         missingItems: data.missingItems,
         additionalComments: data.additionalComments,
         clientEmail: clientEmail || undefined,
+        serialNumber: data.serialNumber,
       });
 
       // Show success screen
@@ -197,6 +197,7 @@ function InstallationPage() {
       additionalComments: '',
       clientInstallationSignature: '',
       installerName: '',
+      serialNumber: '',
     },
   });
 
@@ -214,6 +215,13 @@ function InstallationPage() {
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [isSubmitting]);
+
+  // Update form with order data when loaded
+  useEffect(() => {
+    if (order) {
+      form.setValue('serialNumber', order.serialNumber || '');
+    }
+  }, [order, form]);
   const onSubmit = async () => {
     if (!order || !token) return;
 
@@ -435,12 +443,23 @@ function InstallationPage() {
                     <p className="text-sm text-blue-700">
                       Réf: {order.robotInventory.reference}
                     </p>
-                    {order.serialNumber && (
-                      <p className="text-sm text-blue-700">
-                        S/N: {order.serialNumber}
-                      </p>
-                    )}
                   </div>
+
+                  {/* Serial Number Field */}
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-blue-800">
+                      Numéro de série
+                    </label>
+                    <Input
+                      {...form.register('serialNumber')}
+                      placeholder="Saisir le numéro de série"
+                      className="rounded-lg border-2 border-blue-200 bg-white transition-colors focus:border-blue-500 focus:ring-0"
+                    />
+                    <p className="mt-1 text-xs text-blue-600">
+                      Vous pouvez modifier ou ajouter le numéro de série
+                    </p>
+                  </div>
+
                   {order.installationDate && (
                     <div className="flex items-center rounded-lg bg-blue-100 p-3">
                       <Calendar className="mr-2 h-4 w-4 text-blue-600" />
